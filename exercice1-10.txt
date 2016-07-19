@@ -1,0 +1,145 @@
+Exercice #1
+create database decodemtl_addressbook;
+
+CREATE TABLE Account (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255),
+    password VARCHAR(40), 
+    createdOn DATETIME,
+    modifiedOn DATETIME
+    );
+    
+CREATE TABLE AddressBook (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    accountId INT,
+    name VARCHAR(255),
+    createdOn DATETIME,
+    modifiedOn DATETIME, 
+    FOREIGN KEY (accountId) REFERENCES Account(id)
+    );
+    
+CREATE TABLE Entry (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    addressBookId INT,
+    firstName VARCHAR(255),
+    lastName VARCHAR(255),
+    birthday DATETIME,
+    type ENUM('phone', 'address', 'electronic-mail'), 
+    FOREIGN KEY (addressBookId) REFERENCES AddressBook(id)
+    );
+    
+CREATE TABLE Address (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    entryId INT,
+    type ENUM ('home', 'work', 'other'),
+    addressLine1 VARCHAR(255),
+    addressLine2 VARCHAR(255),
+    city VARCHAR(255),
+    province VARCHAR(128),
+    country VARCHAR(128),
+    postalCode VARCHAR(10),
+    FOREIGN KEY (entryId) REFERENCES Entry(id)
+    );
+
+CREATE TABLE Phone (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    entryId INT,
+    type ENUM('phone', 'address', 'electronic-mail'), 
+    subtype ENUM('landline', 'cellular', 'fax'),
+    content VARCHAR(255),
+    FOREIGN KEY (entryId) REFERENCES Entry(id)
+    );
+    
+CREATE TABLE ElectronicMail (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    entryId INT,
+    type ENUM('phone', 'address', 'electronic-mail'), 
+    content VARCHAR(255),
+    FOREIGN KEY (entryId) REFERENCES Entry(id)
+    );
+    
+
+Exercice #2
+
+source data/import-account.sql;
+source data/import-addressbook.sql;
+source data/import-entry.sql;
+
+Exercise 3
+
+List all of the countries with respective occurence totals in DESC order
+
+select count(*) as numberCountry, country from Address group by country ORDER BY numberCountry DESC;
+
+Country names should all appear lowercase
+select count(*) as numberCountry, LOWER(country) from Address group by country ORDER BY numberCountry DESC;
+
+Exercise 4
+
+List all of the first names for AddressBook.name="Pharetra Ut Limited"
+
+SELECT firstName, AddressBook.name FROM Entry
+    JOIN AddressBook ON Entry.addressBookId = AddressBook.id
+    where AddressBook.name="Pharetra Ut Limited";
+
+Exercise 5
+
+List all of the emails associated to AddressBook.id = 100
+
+SELECT ElectronicMail.content FROM ElectronicMail
+    JOIN Entry ON ElectronicMail.entryId = Entry.id
+    JOIN AddressBook ON Entry.addressBookId = AddressBook.id
+    where AddressBook.id = 100;
+    
+SELECT ElectronicMail.content FROM ElectronicMail
+    JOIN Entry ON ElectronicMail.entryId = Entry.id
+    where Entry.addressBookId = 100;
+    
+Exercise 6
+
+List all of the phone numbers for Jenkins, Charlotte
+
+SELECT Phone.content FROM Phone
+    JOIN Entry ON Phone.entryId = Entry.id
+    where Entry.firstName= 'Charlotte' and Entry.lastName= 'Jenkins';
+    
+Exercice 7
+
+List all possible domain name values for ElectronicMail (email@domain.name)
+
+SELECT substring_index(content, '@', -1), COUNT(*) 
+    FROM ElectronicMail
+        GROUP BY substring_index(content, '@', -1);
+        
+Exercise 8
+
+List how many phones were landlines, cellular and fax for entries 
+with birthdates between October 1950 and October 1960
+
+SELECT Phone.subtype, count(*) FROM Phone
+    JOIN Entry ON Phone.entryId = Entry.id
+    where Entry.birthday >= "1950-10-01" and Entry.birthday < "1960-10-01"
+    GROUP BY Phone.subtype;
+    
+Exercie 9
+
+List all of the cities within the countries of Canada, Austria, Isle of Man, Ireland and Japan.
+
+SELECT city
+    FROM Address
+        Where country = 'Canada'
+        or country = 'Austria'
+        or country = 'Isle of Man'
+        or country = 'Ireland'
+        or country = 'Japan'
+            GROUP BY city;
+
+Exercise 10
+
+Transform all work emails into home emails and vice versa. BE CAREFUL ;)
+
+UPDATE ElectronicMail SET type = CASE
+    WHEN type = 'work' THEN 'home'
+    WHEN type = 'home' THEN 'work'
+    ELSE 'other'
+    END;
